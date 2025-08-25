@@ -1,22 +1,27 @@
-import os
-import sys, getopt
-import signal
-import time
-from edge_impulse_linux.runner import ImpulseRunner
+import getopt
 import io
+import os
+import signal
+import sys
+
+from edge_impulse_linux.runner import ImpulseRunner
 
 runner = None
 
+
 def signal_handler(sig, frame):
-    print('Interrupted')
-    if (runner):
+    print("Interrupted")
+    if runner:
         runner.stop()
     sys.exit(0)
 
+
 signal.signal(signal.SIGINT, signal_handler)
 
+
 def help():
-    print('python classify.py <path_to_model.eim> <path_to_features.txt>')
+    print("python classify.py <path_to_model.eim> <path_to_features.txt>")
+
 
 def main(argv):
     try:
@@ -26,7 +31,7 @@ def main(argv):
         sys.exit(2)
 
     for opt, arg in opts:
-        if opt in ('-h', '--help'):
+        if opt in ("-h", "--help"):
             help()
             sys.exit()
 
@@ -36,27 +41,30 @@ def main(argv):
 
     model = args[0]
 
-
-    features_file = io.open(args[1], 'r', encoding='utf8')
+    features_file = io.open(args[1], "r", encoding="utf8")
     features = features_file.read().strip().split(",")
-    if '0x' in features[0]:
+    if "0x" in features[0]:
         features = [float(int(f, 16)) for f in features]
     else:
         features = [float(f) for f in features]
 
-
     dir_path = os.path.dirname(os.path.realpath(__file__))
     modelfile = os.path.join(dir_path, model)
 
-    print('MODEL: ' + modelfile)
-
+    print("MODEL: " + modelfile)
 
     runner = ImpulseRunner(modelfile)
     try:
         model_info = runner.init()
         # model_info = runner.init(debug=True, timeout=10) # to get debug print out and set longer timeout
 
-        print('Loaded runner for "' + model_info['project']['owner'] + ' / ' + model_info['project']['name'] + '"')
+        print(
+            'Loaded runner for "'
+            + model_info["project"]["owner"]
+            + " / "
+            + model_info["project"]["name"]
+            + '"'
+        )
 
         res = runner.classify(features)
         print("classification:")
@@ -65,8 +73,9 @@ def main(argv):
         print(res["timing"])
 
     finally:
-        if (runner):
+        if runner:
             runner.stop()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main(sys.argv[1:])

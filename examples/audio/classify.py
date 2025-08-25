@@ -1,21 +1,26 @@
+import getopt
 import os
-import sys, getopt
 import signal
-import time
+import sys
+
 from edge_impulse_linux.audio import AudioImpulseRunner
 
 runner = None
 
+
 def signal_handler(sig, frame):
-    print('Interrupted')
-    if (runner):
+    print("Interrupted")
+    if runner:
         runner.stop()
     sys.exit(0)
 
+
 signal.signal(signal.SIGINT, signal_handler)
 
+
 def help():
-    print('python classify.py <path_to_model.eim> <audio_device_ID, optional>' )
+    print("python classify.py <path_to_model.eim> <audio_device_ID, optional>")
+
 
 def main(argv):
     try:
@@ -25,7 +30,7 @@ def main(argv):
         sys.exit(2)
 
     for opt, arg in opts:
-        if opt in ('-h', '--help'):
+        if opt in ("-h", "--help"):
             help()
             sys.exit()
 
@@ -42,33 +47,57 @@ def main(argv):
         try:
             model_info = runner.init()
             # model_info = runner.init(debug=True, timeout=10) # to get debug print out and set longer timeout
-            labels = model_info['model_parameters']['labels']
-            print('Loaded runner for "' + model_info['project']['owner'] + ' / ' + model_info['project']['name'] + '"')
+            labels = model_info["model_parameters"]["labels"]
+            print(
+                'Loaded runner for "'
+                + model_info["project"]["owner"]
+                + " / "
+                + model_info["project"]["name"]
+                + '"'
+            )
 
-            #Let the library choose an audio interface suitable for this model, or pass device ID parameter to manually select a specific audio interface
+            # Let the library choose an audio interface suitable for this model, or pass device ID parameter to manually select a specific audio interface
             selected_device_id = None
             if len(args) >= 2:
-                selected_device_id=int(args[1])
-                print("Device ID "+ str(selected_device_id) + " has been provided as an argument.")
+                selected_device_id = int(args[1])
+                print(
+                    "Device ID "
+                    + str(selected_device_id)
+                    + " has been provided as an argument."
+                )
 
             for res, audio in runner.classifier(device_id=selected_device_id):
                 if "classification" in res["result"].keys():
-                    print('Result (%d ms.) ' % (res['timing']['dsp'] + res['timing']['classification']), end='')
+                    print(
+                        "Result (%d ms.) "
+                        % (res["timing"]["dsp"] + res["timing"]["classification"]),
+                        end="",
+                    )
                     for label in labels:
-                        score = res['result']['classification'][label]
-                        print('%s: %.2f\t' % (label, score), end='')
-                    print('', flush=True)
-                elif "freeform" in res['result'].keys():
-                    print('Result (%d ms.)' % (res['timing']['dsp'] + res['timing']['classification']))
-                    for i in range(0, len(res['result']['freeform'])):
-                        print(f'    Freeform output {i}:', ", ".join(f"{x:.4f}" for x in res['result']['freeform'][i]))
+                        score = res["result"]["classification"][label]
+                        print("%s: %.2f\t" % (label, score), end="")
+                    print("", flush=True)
+                elif "freeform" in res["result"].keys():
+                    print(
+                        "Result (%d ms.)"
+                        % (res["timing"]["dsp"] + res["timing"]["classification"])
+                    )
+                    for i in range(0, len(res["result"]["freeform"])):
+                        print(
+                            f"    Freeform output {i}:",
+                            ", ".join(f"{x:.4f}" for x in res["result"]["freeform"][i]),
+                        )
                 else:
-                    print('Result (%d ms.)' % (res['timing']['dsp'] + res['timing']['classification']))
-                    print(res['result'])
+                    print(
+                        "Result (%d ms.)"
+                        % (res["timing"]["dsp"] + res["timing"]["classification"])
+                    )
+                    print(res["result"])
 
         finally:
-            if (runner):
+            if runner:
                 runner.stop()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main(sys.argv[1:])

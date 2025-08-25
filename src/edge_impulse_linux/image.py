@@ -1,15 +1,19 @@
 #!/usr/bin/env python
 
-import numpy as np
 import sys
+
+import numpy as np
+
 try:
     import cv2
 except ImportError:
     print('Missing OpenCV, install via `pip3 install "opencv-python>=4.5.1.48,<5"`')
     exit(1)
 
-from edge_impulse_linux.runner import ImpulseRunner
 import math
+
+from edge_impulse_linux.runner import ImpulseRunner
+
 
 class ImageImpulseRunner(ImpulseRunner):
     def __init__(self, model_path: str):
@@ -19,20 +23,26 @@ class ImageImpulseRunner(ImpulseRunner):
         self.dim = (0, 0)
         self.videoCapture = cv2.VideoCapture()
         self.isGrayscale = False
-        self.resizeMode = ''
+        self.resizeMode = ""
 
     def init(self, debug=False):
         model_info = super(ImageImpulseRunner, self).init(debug)
-        width = model_info['model_parameters']['image_input_width']
-        height = model_info['model_parameters']['image_input_height']
+        width = model_info["model_parameters"]["image_input_width"]
+        height = model_info["model_parameters"]["image_input_height"]
 
         if width == 0 or height == 0:
-            raise Exception('Model file "' + self._model_path + '" is not suitable for image recognition')
+            raise Exception(
+                'Model file "'
+                + self._model_path
+                + '" is not suitable for image recognition'
+            )
 
         self.dim = (width, height)
-        self.labels = model_info['model_parameters']['labels']
-        self.isGrayscale = model_info['model_parameters']['image_channel_count'] == 1
-        self.resizeMode = model_info['model_parameters'].get('image_resize_mode', 'not-reported')
+        self.labels = model_info["model_parameters"]["labels"]
+        self.isGrayscale = model_info["model_parameters"]["image_channel_count"] == 1
+        self.resizeMode = model_info["model_parameters"].get(
+            "image_resize_mode", "not-reported"
+        )
         return model_info
 
     def __enter__(self):
@@ -48,10 +58,12 @@ class ImageImpulseRunner(ImpulseRunner):
         return super(ImageImpulseRunner, self).classify(data)
 
     # This returns images in RGB format (not BGR)
-    def get_frames(self, videoDeviceId = 0):
+    def get_frames(self, videoDeviceId=0):
         if sys.platform == "darwin":
-            print('Make sure to grant the this script access to your webcam.')
-            print('If your webcam is not responding, try running "tccutil reset Camera" to reset the camera access privileges.')
+            print("Make sure to grant the this script access to your webcam.")
+            print(
+                'If your webcam is not responding, try running "tccutil reset Camera" to reset the camera access privileges.'
+            )
 
         self.videoCapture = cv2.VideoCapture(videoDeviceId)
         while not self.closed:
@@ -61,10 +73,12 @@ class ImageImpulseRunner(ImpulseRunner):
                 yield img
 
     # This returns images in RGB format (not BGR)
-    def classifier(self, videoDeviceId = 0):
+    def classifier(self, videoDeviceId=0):
         if sys.platform == "darwin":
-            print('Make sure to grant the this script access to your webcam.')
-            print('If your webcam is not responding, try running "tccutil reset Camera" to reset the camera access privileges.')
+            print("Make sure to grant the this script access to your webcam.")
+            print(
+                'If your webcam is not responding, try running "tccutil reset Camera" to reset the camera access privileges.'
+            )
 
         self.videoCapture = cv2.VideoCapture(videoDeviceId)
         while not self.closed:
@@ -77,7 +91,9 @@ class ImageImpulseRunner(ImpulseRunner):
                 yield res, cropped
 
     # This expects images in RGB format (not BGR), DEPRECATED, use get_features_from_image_auto_studio_settings
-    def get_features_from_image(self, img, crop_direction_x='center', crop_direction_y='center'):
+    def get_features_from_image(
+        self, img, crop_direction_x="center", crop_direction_y="center"
+    ):
         features = []
 
         EI_CLASSIFIER_INPUT_WIDTH = self.dim[0]
@@ -99,26 +115,38 @@ class ImageImpulseRunner(ImpulseRunner):
 
         resized = cv2.resize(img, resize_size, interpolation=cv2.INTER_AREA)
 
-        if (crop_direction_x == 'center'):
+        if crop_direction_x == "center":
             crop_x = int((resize_size_w - EI_CLASSIFIER_INPUT_WIDTH) / 2)  # 0 when same
-        elif (crop_direction_x == 'left'):
+        elif crop_direction_x == "left":
             crop_x = 0
-        elif (crop_direction_x == 'right'):
-            crop_x = resize_size_w - EI_CLASSIFIER_INPUT_WIDTH  # can't be negative b/c one size will match input and the other will be larger
+        elif crop_direction_x == "right":
+            crop_x = (
+                resize_size_w - EI_CLASSIFIER_INPUT_WIDTH
+            )  # can't be negative b/c one size will match input and the other will be larger
         else:
-            raise Exception('Invalid value for crop_direction_x, should be center, left or right')
+            raise Exception(
+                "Invalid value for crop_direction_x, should be center, left or right"
+            )
 
-        if (crop_direction_y == 'center'):
-            crop_y = int((resize_size_h - resize_size_w) / 2) if resize_size_h > resize_size_w else 0
-        elif (crop_direction_y == 'top'):
+        if crop_direction_y == "center":
+            crop_y = (
+                int((resize_size_h - resize_size_w) / 2)
+                if resize_size_h > resize_size_w
+                else 0
+            )
+        elif crop_direction_y == "top":
             crop_y = 0
-        elif (crop_direction_y == 'bottom'):
+        elif crop_direction_y == "bottom":
             crop_y = resize_size_h - EI_CLASSIFIER_INPUT_HEIGHT
         else:
-            raise Exception('Invalid value for crop_direction_y, should be center, top or bottom')
+            raise Exception(
+                "Invalid value for crop_direction_y, should be center, top or bottom"
+            )
 
-        cropped = resized[crop_y: crop_y + EI_CLASSIFIER_INPUT_HEIGHT,
-                          crop_x: crop_x + EI_CLASSIFIER_INPUT_WIDTH]
+        cropped = resized[
+            crop_y : crop_y + EI_CLASSIFIER_INPUT_HEIGHT,
+            crop_x : crop_x + EI_CLASSIFIER_INPUT_WIDTH,
+        ]
 
         if self.isGrayscale:
             cropped = cv2.cvtColor(cropped, cv2.COLOR_BGR2GRAY)
@@ -138,12 +166,13 @@ class ImageImpulseRunner(ImpulseRunner):
         return features, cropped
 
     def get_features_from_image_auto_studio_settings(self, img):
-        if self.resizeMode == '':
-            raise Exception(
-                'Runner has not initialized, please call init() first')
-        if self.resizeMode == 'not-reported':
-            self.resizeMode = 'squash'
-        return get_features_from_image_with_studio_mode(img, self.resizeMode, self.dim[0], self.dim[1], self.isGrayscale)
+        if self.resizeMode == "":
+            raise Exception("Runner has not initialized, please call init() first")
+        if self.resizeMode == "not-reported":
+            self.resizeMode = "squash"
+        return get_features_from_image_with_studio_mode(
+            img, self.resizeMode, self.dim[0], self.dim[1], self.isGrayscale
+        )
 
 
 def resize_image(image, size):
@@ -157,6 +186,7 @@ def resize_image(image, size):
         The resized image as a NumPy array.
     """
     return cv2.resize(image, size, interpolation=cv2.INTER_AREA)
+
 
 def resize_with_letterbox(image, target_width, target_height):
     """Resize an image while maintaining aspect ratio using letterboxing.
@@ -186,12 +216,22 @@ def resize_with_letterbox(image, target_width, target_height):
 
     # Resize image and add padding
     resized_image = resize_image(image, (new_width, new_height))
-    padded_image = cv2.copyMakeBorder(resized_image, top_pad, bottom_pad, left_pad, right_pad, cv2.BORDER_CONSTANT, value=0)
+    padded_image = cv2.copyMakeBorder(
+        resized_image,
+        top_pad,
+        bottom_pad,
+        left_pad,
+        right_pad,
+        cv2.BORDER_CONSTANT,
+        value=0,
+    )
 
     return padded_image
 
 
-def get_features_from_image_with_studio_mode(img, mode, output_width, output_height, is_grayscale):
+def get_features_from_image_with_studio_mode(
+    img, mode, output_width, output_height, is_grayscale
+):
     """
     Extract features from an image using different resizing modes suitable for Edge Impulse Studio.
 
@@ -213,23 +253,25 @@ def get_features_from_image_with_studio_mode(img, mode, output_width, output_hei
     in_frame_cols = img.shape[1]
     in_frame_rows = img.shape[0]
 
-    if mode == 'fit-shortest':
+    if mode == "fit-shortest":
         aspect_ratio = output_width / output_height
         if in_frame_cols / in_frame_rows > aspect_ratio:
             # Image is wider than target aspect ratio
             new_width = int(in_frame_rows * aspect_ratio)
             offset = (in_frame_cols - new_width) // 2
-            cropped_img = img[:, offset:offset + new_width]
+            cropped_img = img[:, offset : offset + new_width]
         else:
             # Image is taller than target aspect ratio
             new_height = int(in_frame_cols / aspect_ratio)
             offset = (in_frame_rows - new_height) // 2
-            cropped_img = img[offset:offset + new_height, :]
+            cropped_img = img[offset : offset + new_height, :]
 
-        resized_img = cv2.resize(cropped_img, (output_width, output_height), interpolation=cv2.INTER_AREA)
-    elif mode == 'fit-longest':
+        resized_img = cv2.resize(
+            cropped_img, (output_width, output_height), interpolation=cv2.INTER_AREA
+        )
+    elif mode == "fit-longest":
         resized_img = resize_with_letterbox(img, output_width, output_height)
-    elif mode == 'squash':
+    elif mode == "squash":
         resized_img = resize_image(img, (output_width, output_height))
     else:
         raise ValueError(f"Unsupported mode: {mode}")
@@ -240,6 +282,10 @@ def get_features_from_image_with_studio_mode(img, mode, output_width, output_hei
     else:
         # Use numpy's vectorized operations for RGB feature encoding
         pixels = resized_img.astype(np.uint32)
-        features = ((pixels[..., 0] << 16) | (pixels[..., 1] << 8) | pixels[..., 2]).flatten().tolist()
+        features = (
+            ((pixels[..., 0] << 16) | (pixels[..., 1] << 8) | pixels[..., 2])
+            .flatten()
+            .tolist()
+        )
 
     return features, resized_img

@@ -1,16 +1,19 @@
-import subprocess
+import json
 import os.path
-import tempfile
 import shutil
-import time
 import signal
 import socket
-import json
-from multiprocessing import shared_memory, resource_tracker
+import subprocess
+import tempfile
+import time
+from multiprocessing import resource_tracker, shared_memory
+
 import numpy as np
+
 
 def now():
     return round(time.time() * 1000)
+
 
 class ImpulseRunner:
     def __init__(self, model_path: str, timeout: int = 5):
@@ -57,16 +60,20 @@ class ImpulseRunner:
 
         hello_resp = self._hello_resp = self.hello()
 
-        if ('features_shm' in hello_resp.keys()):
-            shm_name = hello_resp['features_shm']['name']
+        if "features_shm" in hello_resp.keys():
+            shm_name = hello_resp["features_shm"]["name"]
             # python does not want the leading slash
-            shm_name = shm_name.lstrip('/')
+            shm_name = shm_name.lstrip("/")
             shm = shared_memory.SharedMemory(name=shm_name)
             self._shm = {
-                'shm': shm,
-                'type': hello_resp['features_shm']['type'],
-                'elements': hello_resp['features_shm']['elements'],
-                'array': np.ndarray((hello_resp['features_shm']['elements'],), dtype=np.float32, buffer=shm.buf)
+                "shm": shm,
+                "type": hello_resp["features_shm"]["type"],
+                "elements": hello_resp["features_shm"]["elements"],
+                "array": np.ndarray(
+                    (hello_resp["features_shm"]["elements"],),
+                    dtype=np.float32,
+                    buffer=shm.buf,
+                ),
             }
 
         return self._hello_resp
@@ -89,8 +96,8 @@ class ImpulseRunner:
             self._runner = None
 
         if self._shm is not None:
-            self._shm['shm'].close()
-            resource_tracker.unregister(self._shm['shm']._name, "shared_memory")
+            self._shm["shm"].close()
+            resource_tracker.unregister(self._shm["shm"]._name, "shared_memory")
             self._shm = None
 
     def hello(self):
@@ -99,7 +106,7 @@ class ImpulseRunner:
 
     def classify(self, data):
         if self._shm:
-            self._shm['array'][:] = data
+            self._shm["array"][:] = data
 
             msg = {
                 "classify_shm": {
@@ -116,15 +123,13 @@ class ImpulseRunner:
         return send_resp
 
     def set_threshold(self, obj):
-        if not 'id' in obj:
+        if "id" not in obj:
             raise Exception('set_threshold requires an object with an "id" field')
 
-        msg = { 'set_threshold': obj }
+        msg = {"set_threshold": obj}
         return self.send_msg(msg)
 
     def send_msg(self, msg):
-        t_send_msg = now()
-
         if not self._client:
             raise Exception("ImpulseRunner is not initialized (call init())")
 
@@ -134,8 +139,6 @@ class ImpulseRunner:
         msg["id"] = ix
         self._client.send(json.dumps(msg).encode("utf-8"))
 
-        t_sent_msg = now()
-
         data = b""
         while True:
             chunk = self._client.recv(1024)
@@ -144,8 +147,6 @@ class ImpulseRunner:
                 data = data + chunk[:-1]
                 break
             data = data + chunk
-
-        t_received_msg = now()
 
         braces_open = 0
         braces_closed = 0
@@ -179,6 +180,4 @@ class ImpulseRunner:
         del resp["id"]
         del resp["success"]
 
-        t_parsed_msg = now()
-        # print('sent', t_sent_msg - t_send_msg, 'received', t_received_msg - t_send_msg, 'parsed', t_parsed_msg - t_send_msg)
         return resp

@@ -1,49 +1,62 @@
 #!/usr/bin/env python
+# flake8: noqa F401
 
-import device_patches       # Device specific patches for Jetson Nano (needs to be before importing cv2)
+import device_patches  # Device specific patches for Jetson Nano (needs to be before importing cv2)
 
 try:
     import cv2
 except ImportError:
     print('Missing OpenCV, install via `pip3 install "opencv-python>=4.5.1.48,<5"`')
     exit(1)
+import getopt
 import os
-import sys, getopt
 import signal
+import sys
 import time
+
 from edge_impulse_linux.image import ImageImpulseRunner
 
 runner = None
 
+
 def now():
     return round(time.time() * 1000)
+
 
 def get_webcams():
     port_ids = []
     for port in range(5):
-        print("Looking for a camera in port %s:" %port)
+        print("Looking for a camera in port %s:" % port)
         camera = cv2.VideoCapture(port)
         if camera.isOpened():
             ret = camera.read()[0]
             if ret:
-                backendName =camera.getBackendName()
+                backendName = camera.getBackendName()
                 w = camera.get(3)
                 h = camera.get(4)
-                print("Camera %s (%s x %s) found in port %s " %(backendName,h,w, port))
+                print(
+                    "Camera %s (%s x %s) found in port %s " % (backendName, h, w, port)
+                )
                 port_ids.append(port)
             camera.release()
     return port_ids
 
+
 def sigint_handler(sig, frame):
-    print('Interrupted')
-    if (runner):
+    print("Interrupted")
+    if runner:
         runner.stop()
     sys.exit(0)
 
+
 signal.signal(signal.SIGINT, sigint_handler)
 
+
 def help():
-    print('python classify.py <path_to_model.eim> <Camera port ID, only required when more than 1 camera is present>')
+    print(
+        "python classify.py <path_to_model.eim> <Camera port ID, only required when more than 1 camera is present>"
+    )
+
 
 def main(argv):
     try:
@@ -53,7 +66,7 @@ def main(argv):
         sys.exit(2)
 
     for opt, arg in opts:
-        if opt in ('-h', '--help'):
+        if opt in ("-h", "--help"):
             help()
             sys.exit()
 
@@ -66,23 +79,31 @@ def main(argv):
     dir_path = os.path.dirname(os.path.realpath(__file__))
     modelfile = os.path.join(dir_path, model)
 
-    print('MODEL: ' + modelfile)
+    print("MODEL: " + modelfile)
 
     with ImageImpulseRunner(modelfile) as runner:
         try:
             model_info = runner.init()
             # model_info = runner.init(debug=True, timeout=10) # to get debug print out and set longer timeout
 
-            print('Loaded runner for "' + model_info['project']['owner'] + ' / ' + model_info['project']['name'] + '"')
-            labels = model_info['model_parameters']['labels']
-            if len(args)>= 2:
+            print(
+                'Loaded runner for "'
+                + model_info["project"]["owner"]
+                + " / "
+                + model_info["project"]["name"]
+                + '"'
+            )
+            labels = model_info["model_parameters"]["labels"]
+            if len(args) >= 2:
                 videoCaptureDeviceId = int(args[1])
             else:
                 port_ids = get_webcams()
                 if len(port_ids) == 0:
-                    raise Exception('Cannot find any webcams')
-                if len(args)<= 1 and len(port_ids)> 1:
-                    raise Exception("Multiple cameras found. Add the camera port ID as a second argument to use to this script")
+                    raise Exception("Cannot find any webcams")
+                if len(args) <= 1 and len(port_ids) > 1:
+                    raise Exception(
+                        "Multiple cameras found. Add the camera port ID as a second argument to use to this script"
+                    )
                 videoCaptureDeviceId = int(port_ids[0])
 
             camera = cv2.VideoCapture(videoCaptureDeviceId)
@@ -91,59 +112,111 @@ def main(argv):
                 backendName = camera.getBackendName()
                 w = camera.get(3)
                 h = camera.get(4)
-                print("Camera %s (%s x %s) in port %s selected." %(backendName,h,w, videoCaptureDeviceId))
+                print(
+                    "Camera %s (%s x %s) in port %s selected."
+                    % (backendName, h, w, videoCaptureDeviceId)
+                )
                 camera.release()
             else:
                 raise Exception("Couldn't initialize selected camera.")
 
-            next_frame = 0 # limit to ~10 fps here
+            next_frame = 0  # limit to ~10 fps here
 
             for img in runner.get_frames(videoCaptureDeviceId):
-                if (next_frame > now()):
+                if next_frame > now():
                     time.sleep((next_frame - now()) / 1000)
 
                 # make two cuts from the image, one on the left and one on the right
-                features_l, cropped_l = runner.get_features_from_image(img, 'left')
-                features_r, cropped_r = runner.get_features_from_image(img, 'right')
+                features_l, cropped_l = runner.get_features_from_image(img, "left")
+                features_r, cropped_r = runner.get_features_from_image(img, "right")
 
                 # classify both
                 res_l = runner.classify(features_l)
                 res_r = runner.classify(features_r)
 
-                cv2.imwrite('debug_l.jpg', cv2.cvtColor(cropped_l, cv2.COLOR_RGB2BGR))
-                cv2.imwrite('debug_r.jpg', cv2.cvtColor(cropped_r, cv2.COLOR_RGB2BGR))
+                cv2.imwrite("debug_l.jpg", cv2.cvtColor(cropped_l, cv2.COLOR_RGB2BGR))
+                cv2.imwrite("debug_r.jpg", cv2.cvtColor(cropped_r, cv2.COLOR_RGB2BGR))
 
                 def print_classification(res, tag):
                     if "classification" in res["result"].keys():
-                        print('%s: Result (%d ms.) ' % (tag, res['timing']['dsp'] + res['timing']['classification']), end='')
+                        print(
+                            "%s: Result (%d ms.) "
+                            % (
+                                tag,
+                                res["timing"]["dsp"] + res["timing"]["classification"],
+                            ),
+                            end="",
+                        )
                         for label in labels:
-                            score = res['result']['classification'][label]
-                            print('%s: %.2f\t' % (label, score), end='')
-                        print('', flush=True)
+                            score = res["result"]["classification"][label]
+                            print("%s: %.2f\t" % (label, score), end="")
+                        print("", flush=True)
                     elif "bounding_boxes" in res["result"].keys():
-                        print('%s: Found %d bounding boxes (%d ms.)' % (tag, len(res["result"]["bounding_boxes"]), res['timing']['dsp'] + res['timing']['classification']))
+                        print(
+                            "%s: Found %d bounding boxes (%d ms.)"
+                            % (
+                                tag,
+                                len(res["result"]["bounding_boxes"]),
+                                res["timing"]["dsp"] + res["timing"]["classification"],
+                            )
+                        )
                         for bb in res["result"]["bounding_boxes"]:
-                            print('\t%s (%.2f): x=%d y=%d w=%d h=%d' % (bb['label'], bb['value'], bb['x'], bb['y'], bb['width'], bb['height']))
-                    elif "freeform" in res['result'].keys():
-                        print('Result (%d ms.)' % (res['timing']['dsp'] + res['timing']['classification']))
-                        for i in range(0, len(res['result']['freeform'])):
-                            print(f'    Freeform output {i}:', ", ".join(f"{x:.4f}" for x in res['result']['freeform'][i]))
+                            print(
+                                "\t%s (%.2f): x=%d y=%d w=%d h=%d"
+                                % (
+                                    bb["label"],
+                                    bb["value"],
+                                    bb["x"],
+                                    bb["y"],
+                                    bb["width"],
+                                    bb["height"],
+                                )
+                            )
+                    elif "freeform" in res["result"].keys():
+                        print(
+                            "Result (%d ms.)"
+                            % (res["timing"]["dsp"] + res["timing"]["classification"])
+                        )
+                        for i in range(0, len(res["result"]["freeform"])):
+                            print(
+                                f"    Freeform output {i}:",
+                                ", ".join(
+                                    f"{x:.4f}" for x in res["result"]["freeform"][i]
+                                ),
+                            )
 
                     if "visual_anomaly_grid" in res["result"].keys():
-                        print('Found %d visual anomalies (%d ms.)' % (len(res["result"]["visual_anomaly_grid"]), res['timing']['dsp'] +
-                                                                                                                 res['timing']['classification'] +
-                                                                                                                 res['timing']['anomaly']))
+                        print(
+                            "Found %d visual anomalies (%d ms.)"
+                            % (
+                                len(res["result"]["visual_anomaly_grid"]),
+                                res["timing"]["dsp"]
+                                + res["timing"]["classification"]
+                                + res["timing"]["anomaly"],
+                            )
+                        )
                         for grid_cell in res["result"]["visual_anomaly_grid"]:
-                            print('\t%s (%.2f): x=%d y=%d w=%d h=%d' % (grid_cell['label'], grid_cell['value'], grid_cell['x'], grid_cell['y'], grid_cell['width'], grid_cell['height']))
+                            print(
+                                "\t%s (%.2f): x=%d y=%d w=%d h=%d"
+                                % (
+                                    grid_cell["label"],
+                                    grid_cell["value"],
+                                    grid_cell["x"],
+                                    grid_cell["y"],
+                                    grid_cell["width"],
+                                    grid_cell["height"],
+                                )
+                            )
 
-                print_classification(res_l, 'LEFT')
-                print_classification(res_r, 'RIGHT')
+                print_classification(res_l, "LEFT")
+                print_classification(res_r, "RIGHT")
 
                 next_frame = now() + 100
 
         finally:
-            if (runner):
+            if runner:
                 runner.stop()
 
+
 if __name__ == "__main__":
-   main(sys.argv[1:])
+    main(sys.argv[1:])
