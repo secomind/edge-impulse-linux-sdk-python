@@ -1,0 +1,60 @@
+name: Lint Checks
+
+on: [pull_request, push]
+
+jobs:
+  sort_libraries:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Install Colint
+        uses: ./.github/actions/install-colint
+
+      - name: Run Sort Libraries Check
+        run: |
+          colint sort-libraries . --check --config-file ./lint
+  
+  code_format:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+      
+      - name: Install Colint
+        uses: ./.github/actions/install-colint
+
+      - name: Run Code Format Check
+        run: |
+          colint code-format . --check --config-file ./lint
+
+  grammar_check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Install Colint
+        uses: ./.github/actions/install-colint
+
+      - name: Run Grammar Check
+        run: |
+          colint grammar-check . --check --config-file ./lint
+
+  newline_fix:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+      
+      - name: Install Colint
+        uses: ./.github/actions/install-colint
+
+      - name: Run Newline Fix Check
+        run: |
+          colint newline-fix . --check --config-file ./lint
