@@ -1,7 +1,48 @@
 [build-system]
-requires = [
-    "setuptools>=42",
-    "wheel"
-]
+requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "edge_impulse_linux"
+version = "1.2.0"
+dynamic = ["readme"]
+requires-python = ">=3.10"
+description = "Python runner for real-time ML classification"
+authors = [
+    { name = "EdgeImpulse Inc.", email = "hello@edgeimpulse.com" },
+]
+license = { file = "LICENSE" }
+keywords = ["edge-impulse", "machine-learning", "embedded", "linux"]
+classifiers = [
+    "License :: OSI Approved :: BSD License",
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+
+dependencies = []
+
+[project.optional-dependencies]
+audio = [
+    "numpy>=1.19.5,<3", 
+    "pyaudio>=0.2.11,<0.3",
+]
+image = [
+    "opencv-python-headless>=4.5.1",
+    "psutil>=5.8.0"
+]
+all = [
+    "edge_impulse_linux[audio]",
+    "edge_impulse_linux[image]",
+]
+
+[project.urls]
+Homepage = "https://www.edgeimpulse.com"
+"Bug Tracker" = "https://github.com/edgeimpulse/linux-sdk-python/issues"
+Repository = "https://github.com/edgeimpulse/linux-sdk-python"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.dynamic]
+readme = { file = ["README.md"], content-type = "text/markdown" }
 
