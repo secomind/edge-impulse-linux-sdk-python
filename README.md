@@ -1,3 +1,16 @@
+# Fork Improvements
+
+This is an improved fork of the original Edge Impulse Linux SDK that addresses several compatibility and usability issues:
+
+- **Python 3.10+ Compatibility**: Fixed AudioImpulseRunner compatibility issues with Python 3.10 and newer versions by replacing PyAudio dependencies with more robust threading solutions
+- **Optional Dependencies**: Added `[image]` and `[audio]` optional dependency groups so you only install what you need:
+  - `pip3 install edge_impulse_linux[audio]` - for audio classification projects
+  - `pip3 install edge_impulse_linux[image]` - for computer vision projects
+  - `pip3 install edge_impulse_linux[all]` - for both
+- **Improved Stability**: Enhanced threading and audio handling for better reliability across different Python versions
+
+---
+
 # Edge Impulse Linux SDK for Python
 
 This library lets you run machine learning models and collect sensor data on Linux machines using Python. This SDK is part of [Edge Impulse](https://www.edgeimpulse.com) where we enable developers to create the next generation of intelligent device solutions with embedded machine learning. [Start here to learn more and train your first model](https://docs.edgeimpulse.com).
