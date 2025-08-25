@@ -1,7 +1,9 @@
 #!/usr/bin/env python
-# flake8: noqa F401
 
-import device_patches  # Device specific patches for Jetson Nano (needs to be before importing cv2)
+# Device specific patches for Jetson Nano (needs to be before importing cv2)
+from device_patches import initialize_device
+
+initialize_device()
 
 try:
     import cv2
