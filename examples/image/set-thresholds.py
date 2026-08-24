@@ -108,12 +108,10 @@ def main(argv):
                     print("Invalid input, please enter a number")
 
             # dynamically override the thresold from 0.2 -> 0.8
-            runner.set_threshold(
-                {
-                    "id": threshold_id,
-                    "min_score": new_threshold,
-                }
-            )
+            runner.set_threshold({
+                "id": threshold_id,
+                "min_score": new_threshold,
+            })
 
             res = runner.classify(features)
             print("classify response", json.dumps(res, indent=4))

@@ -76,7 +76,6 @@ def main(argv):
             img = getFrame(sec)
 
             while img.size != 0:
-
                 # imread returns images in BGR format, so we need to convert to RGB
                 img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 

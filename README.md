@@ -20,34 +20,34 @@ This library lets you run machine learning models and collect sensor data on Lin
 1. Install a recent version of [Python 3](https://www.python.org/downloads/) and `pip` tools.
 1. Install the SDK:
 
-    **Raspberry Pi**
+   **Raspberry Pi**
 
-    ```
-    $ sudo apt-get install libatlas-base-dev libportaudio0 libportaudio2 libportaudiocpp0 portaudio19-dev libopenjp2-7 libgtk-3-0 libswscale-dev libavformat58 libavcodec58
-    $ pip3 install edge_impulse_linux -i https://pypi.python.org/simple
-    ```
+   ```
+   $ sudo apt-get install libatlas-base-dev libportaudio0 libportaudio2 libportaudiocpp0 portaudio19-dev libopenjp2-7 libgtk-3-0 libswscale-dev libavformat58 libavcodec58
+   $ pip3 install edge_impulse_linux -i https://pypi.python.org/simple
+   ```
 
-    **Other platforms**
+   **Other platforms**
 
-    ```
-    $ pip3 install edge_impulse_linux
-    ```
+   ```
+   $ pip3 install edge_impulse_linux
+   ```
 
 1. Clone this repository to get the examples:
 
-    ```
-    $ git clone https://github.com/edgeimpulse/linux-sdk-python
-    ```
+   ```
+   $ git clone https://github.com/edgeimpulse/linux-sdk-python
+   ```
 
-4. Install pip dependencies:
+1. Install pip dependencies:
 
-    ```
-    $ pip3 install -r requirements.txt
-    ```
+   ```
+   $ pip3 install -r requirements.txt
+   ```
 
-    For the computer vision examples you'll want `opencv-python>=4.5.1.48,<5`
-    Note on macOS on apple silicon, you will need to use a later version,
-    4.10.0.84 tested and installs cleanly
+   For the computer vision examples you'll want `opencv-python>=4.5.1.48,<5`
+   Note on macOS on apple silicon, you will need to use a later version,
+   4.10.0.84 tested and installs cleanly
 
 ## Collecting data
 
@@ -69,31 +69,32 @@ To classify data (whether this is from the camera, the microphone, or a custom s
 1. Install the [Edge Impulse for Linux CLI](https://docs.edgeimpulse.com/docs/edge-impulse-for-linux).
 1. Download the model file via:
 
-    ```
-    $ edge-impulse-linux-runner --download modelfile.eim
-    ```
+   ```
+   $ edge-impulse-linux-runner --download modelfile.eim
+   ```
 
-    This downloads the file into `modelfile.eim`. (Want to switch projects? Add `--clean`)
+   This downloads the file into `modelfile.eim`. (Want to switch projects? Add `--clean`)
 
 Then you can start classifying realtime sensor data. We have examples for:
 
-* [Audio](https://github.com/edgeimpulse/linux-sdk-python/blob/master/examples/audio/classify.py) - grabs data from the microphone and classifies it in realtime.
-* [Camera](https://github.com/edgeimpulse/linux-sdk-python/blob/master/examples/image/classify.py) - grabs data from a webcam and classifies it in realtime.
-* [Camera (full frame)](https://github.com/edgeimpulse/linux-sdk-python/blob/master/examples/image/classify-full-frame.py) - grabs data from a webcam and classifies it twice (once cut from the left, once cut from the right). This is useful if you have a wide-angle lense and don't want to miss any events.
-* [Still image](https://github.com/edgeimpulse/linux-sdk-python/blob/master/examples/image/classify-image.py) - classifies a still image from your hard drive.
-* [Video](https://github.com/edgeimpulse/linux-sdk-python/blob/master/examples/image/classify-video.py) - grabs frames from a video source from your hard drive and classifies it.
-* [Custom data](https://github.com/edgeimpulse/linux-sdk-python/blob/master/examples/custom/classify.py) - classifies custom sensor data.
+- [Audio](https://github.com/edgeimpulse/linux-sdk-python/blob/master/examples/audio/classify.py) - grabs data from the microphone and classifies it in realtime.
+- [Camera](https://github.com/edgeimpulse/linux-sdk-python/blob/master/examples/image/classify.py) - grabs data from a webcam and classifies it in realtime.
+- [Camera (full frame)](https://github.com/edgeimpulse/linux-sdk-python/blob/master/examples/image/classify-full-frame.py) - grabs data from a webcam and classifies it twice (once cut from the left, once cut from the right). This is useful if you have a wide-angle lense and don't want to miss any events.
+- [Still image](https://github.com/edgeimpulse/linux-sdk-python/blob/master/examples/image/classify-image.py) - classifies a still image from your hard drive.
+- [Video](https://github.com/edgeimpulse/linux-sdk-python/blob/master/examples/image/classify-video.py) - grabs frames from a video source from your hard drive and classifies it.
+- [Custom data](https://github.com/edgeimpulse/linux-sdk-python/blob/master/examples/custom/classify.py) - classifies custom sensor data.
 
 ## Troubleshooting
 
 ### Collecting print out from the model
 
 To display the logging messages (ie, you may be used to in other deployments), init the runner like so
+
 ```
 # model_info = runner.init(debug=True) # to get debug print out
 ```
-This will pipe stdout and stderr into the same of your own process
 
+This will pipe stdout and stderr into the same of your own process
 
 ### [Errno -9986] Internal PortAudio error (macOS)
 
