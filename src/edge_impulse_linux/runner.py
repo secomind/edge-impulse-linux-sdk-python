@@ -61,6 +61,7 @@ class ImpulseRunner:
         Args:
             model_path (str): Path to the executable model file.
             timeout (int): timeout in seconds.
+            allow_shm (bool, optional): Allow shared memory usage. Defaults to True.
         """
         self._model_path = model_path
         self._tempdir = None
@@ -145,19 +146,17 @@ class ImpulseRunner:
                     # python does not want the leading slash
                     shm_name = shm_name.lstrip("/")
                     shm = shared_memory.SharedMemory(name=shm_name)
-                    self._freeform_output_shm.append(
-                        {
-                            "index": output_shm["index"],
-                            "shm": shm,
-                            "type": output_shm["type"],
-                            "elements": output_shm["elements"],
-                            "array": np.ndarray(
-                                (output_shm["elements"],),
-                                dtype=np.float32,
-                                buffer=shm.buf,
-                            ),
-                        }
-                    )
+                    self._freeform_output_shm.append({
+                        "index": output_shm["index"],
+                        "shm": shm,
+                        "type": output_shm["type"],
+                        "elements": output_shm["elements"],
+                        "array": np.ndarray(
+                            (output_shm["elements"],),
+                            dtype=np.float32,
+                            buffer=shm.buf,
+                        ),
+                    })
 
         return self._hello_resp
 
@@ -245,16 +244,16 @@ class ImpulseRunner:
         return self.send_msg(msg)
 
     def send_msg(self, msg):
-        """Classifies the given data using the model.
+        """Sends a message to the runner process.
 
         Args:
-            data (any): The data to classify.
+            msg (dict): The message payload to send.
 
         Returns:
-            dict: The classification response.
+            dict: The response from the runner.
 
         Raises:
-            Exception: If classification fails.
+            Exception: If communication fails or returns an error.
         """
         if not self._client:
             raise Exception("ImpulseRunner is not initialized (call init())")

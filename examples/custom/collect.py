@@ -31,13 +31,11 @@ if INTERVAL_MS <= 0:
 freq = 1000 / INTERVAL_MS
 values_list = []
 for i in range(2 * int(round(freq, 0))):
-    values_list.append(
-        [
-            math.sin(i * 0.1) * 10,
-            math.cos(i * 0.1) * 10,
-            (math.sin(i * 0.1) + math.cos(i * 0.1)) * 10,
-        ]
-    )
+    values_list.append([
+        math.sin(i * 0.1) * 10,
+        math.cos(i * 0.1) * 10,
+        (math.sin(i * 0.1) + math.cos(i * 0.1)) * 10,
+    ])
 
 data = {
     "protected": {
